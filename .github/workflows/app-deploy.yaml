@@ -47,7 +47,7 @@ jobs:
           fingerprint=$(jq -r '.serviceCredentials.fingerprint' /tmp/creds.json)
           tenancy=$(jq -r '.serviceCredentials.tenancy_ocid' /tmp/creds.json)
           region=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          key_file=~/.oci/oci_api_key.pem
+          key_file=~/.oci/private_key.pem
           pass_phrase="N/A"
           EOF
 
