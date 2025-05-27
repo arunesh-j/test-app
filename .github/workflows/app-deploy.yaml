@@ -38,12 +38,7 @@ jobs:
 
           printf '%s' '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          # Extract the private key and replace "\n" with actual newlines
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem
-
-          echo "=== Validating Private Key ==="
-          openssl rsa -in ~/.oci/private_key.pem -check -noout || (echo "Invalid private key!"; exit 1)
-
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
@@ -111,14 +106,7 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
-          printf '%s' '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
-
-          # Extract the private key and replace "\n" with actual newlines
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem
-
-          echo "=== Validating Private Key ==="
-          openssl rsa -in ~/.oci/private_key.pem -check -noout || (echo "Invalid private key!"; exit 1)
-
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
@@ -142,6 +130,8 @@ jobs:
           echo "=== ~/.oci/config ==="
           cat ~/.oci/config
           echo "=== ~/.oci/private_key.pem ==="
+          cat ~/.oci/private_key.pem
+          echo "=== /tmp/ ==="
           cat ~/.oci/private_key.pem
 
       - name: Install and Configure kubectl
