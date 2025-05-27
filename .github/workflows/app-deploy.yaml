@@ -38,8 +38,8 @@ jobs:
 
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/,"\n")}1' > ~/.oci/oci_api_key.pem
-          chmod 600 ~/.oci/oci_api_key.pem
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | sed 's/\\n/\n/g' > ~/.oci/private_key.pem
+          chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
           [DEFAULT]
@@ -61,8 +61,8 @@ jobs:
         run: |
           echo "=== ~/.oci/config ==="
           cat ~/.oci/config
-          echo "=== ~/.oci/oci_api_key.pem ==="
-          cat ~/.oci/oci_api_key.pem
+          echo "=== ~/.oci/private_key.pem ==="
+          cat ~/.oci/private_key.pem
           
       - name: Test OCI CLI Access
         run: |
@@ -107,7 +107,7 @@ jobs:
           mkdir -p ~/.oci
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/,"\n")}1' > ~/.oci/oci_api_key.pem
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | sed 's/\\n/\n/g' > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
@@ -130,8 +130,8 @@ jobs:
         run: |
           echo "=== ~/.oci/config ==="
           cat ~/.oci/config
-          echo "=== ~/.oci/oci_api_key.pem ==="
-          cat ~/.oci/oci_api_key.pem
+          echo "=== ~/.oci/private_key.pem ==="
+          cat ~/.oci/private_key.pem
 
       - name: Install and Configure kubectl
         run: |
