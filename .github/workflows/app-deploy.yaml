@@ -38,16 +38,23 @@ jobs:
 
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          echo $(jq -r '.serviceCredentials.private_key' /tmp/creds.json) > ~/.oci/private_key.pem
-          chmod 600 ~/.oci/private_key.pem
+          FINGERPRINT=$(jq -r '.serviceCredentials.fingerprint' /tmp/creds.json)
+          REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
+          TENANCY_OCID=$(jq -r '.serviceCredentials.tenancy_ocid' /tmp/creds.json)
+          USER_OCID=$(jq -r '.serviceCredentials.user_ocid' /tmp/creds.json)
 
+          # Convert escaped \n into real newlines in private_key
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | sed 's/\\n/\n/g' > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
+
+          # Create the OCI config file
           cat > ~/.oci/config <<EOF
           [DEFAULT]
-          user=$(jq -r '.serviceCredentials.user_ocid' /tmp/creds.json)
-          fingerprint=$(jq -r '.serviceCredentials.fingerprint' /tmp/creds.json)
-          tenancy=$(jq -r '.serviceCredentials.tenancy_ocid' /tmp/creds.json)
-          region=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          key_file=~/.oci/private_key.pem
+          user=$USER_OCID
+          fingerprint=$FINGERPRINT
+          tenancy=$TENANCY_OCID
+          region=$REGION
+          key_file=~/.oci/oci_api_key.pem
           EOF
 
       - name: Install OCI CLI
@@ -55,6 +62,10 @@ jobs:
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
           source ~/.bashrc || true
+          
+      - name: Test OCI CLI Access
+        run: |
+          oci os ns get --config-file ~/.oci/config --profile DEFAULT
 
       - name: Login to OCI Artifact Registry
         run: |
