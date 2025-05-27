@@ -116,6 +116,11 @@ jobs:
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
           source ~/.bashrc || true
+          
+      - name: Display OCI Config
+        run: |
+          echo "=== ~/.oci/config ==="
+          cat ~/.oci/config
 
       - name: Install and Configure kubectl
         run: |
