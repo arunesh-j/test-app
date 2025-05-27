@@ -38,7 +38,7 @@ jobs:
 
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          printf "%b" "$(jq -r '.serviceCredentials.private_key' /tmp/creds.json)" > ~/.oci/private_key.pem
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem          
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
@@ -107,7 +107,7 @@ jobs:
           mkdir -p ~/.oci
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          printf "%b" "$(jq -r '.serviceCredentials.private_key' /tmp/creds.json)" > ~/.oci/private_key.pem
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem          
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
