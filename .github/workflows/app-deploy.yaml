@@ -36,9 +36,14 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
-          echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+          printf '%s' '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem          
+          # Extract the private key and replace "\n" with actual newlines
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem
+
+          echo "=== Validating Private Key ==="
+          openssl rsa -in ~/.oci/private_key.pem -check -noout || (echo "Invalid private key!"; exit 1)
+
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
@@ -105,9 +110,15 @@ jobs:
       - name: Setup OCI CLI Config
         run: |
           mkdir -p ~/.oci
-          echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
 
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem          
+          printf '%s' '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+
+          # Extract the private key and replace "\n" with actual newlines
+          jq -r '.serviceCredentials.private_key' /tmp/creds.json | awk '{gsub(/\\n/, "\n")} 1' > ~/.oci/private_key.pem
+
+          echo "=== Validating Private Key ==="
+          openssl rsa -in ~/.oci/private_key.pem -check -noout || (echo "Invalid private key!"; exit 1)
+
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
