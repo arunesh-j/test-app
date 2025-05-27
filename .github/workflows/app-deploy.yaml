@@ -52,8 +52,9 @@ jobs:
           EOF
       - name: Install OCI CLI
         run: |
-          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
+          source ~/.bashrc || true
       - name: Login to OCI Artifact Registry
         run: |
           # Extract region from credentials for dynamic registry URL
@@ -110,8 +111,9 @@ jobs:
           EOF
       - name: Install OCI CLI
         run: |
-          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
+          source ~/.bashrc || true
       - name: Install and Configure kubectl
         run: |
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
