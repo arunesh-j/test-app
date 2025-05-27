@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
-          printf '%s' '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+          echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
           
           echo "=== ~/temp.json ==="
           cat /tmp/creds.json
