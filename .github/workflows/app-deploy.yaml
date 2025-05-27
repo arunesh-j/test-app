@@ -66,6 +66,8 @@ jobs:
           cat ~/.oci/config
           echo "=== ~/.oci/private_key.pem ==="
           cat ~/.oci/private_key.pem
+          echo "=== ~/temp.json ==="
+          cat /tmp/creds.json
           
       - name: Test OCI CLI Access
         run: |
