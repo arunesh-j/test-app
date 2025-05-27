@@ -37,6 +37,9 @@ jobs:
           mkdir -p ~/.oci
 
           printf '%s' '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+          
+          echo "=== ~/temp.json ==="
+          cat /tmp/creds.json
 
           jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
