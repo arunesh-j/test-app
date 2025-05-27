@@ -9,6 +9,7 @@ on:
 env:
   SERVICE_NAME: servb
   NAMESPACE: test-app
+  NAMESPACES: bm3jgid6hk1z
   CLUSTER_NAME: stage-clus
   ARTIFACT_REPO_NAME: zop-dev
   OKE_CLUSTER_ID: ocid1.cluster.oc1.ap-mumbai-1.aaaaaaaalhmiksodiukv4fqmvldccmtkwokc5nuseve6hw2gocdfjcnggdwq
@@ -84,18 +85,18 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          IMAGE_URL="${REGION}.ocir.io/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          IMAGE_URL="${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
 
           docker build -t ${IMAGE_URL} .
           docker push ${IMAGE_URL}
 
-          docker tag ${IMAGE_URL} "${REGION}.ocir.io/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
-          docker push "${REGION}.ocir.io/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
+          docker tag ${IMAGE_URL} "${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
+          docker push "${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
 
       - id: output-image
         run: |
           REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          echo "image=${REGION}.ocir.io/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "image=${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   deployment:
     runs-on: ubuntu-latest
