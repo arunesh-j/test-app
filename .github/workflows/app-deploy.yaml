@@ -79,7 +79,7 @@ jobs:
           AUTH_TOKEN=$(jq -r '.auth_token' /tmp/creds.json)
           USERNAME=$(jq -r '.username' /tmp/creds.json)
 
-          echo "${AUTH_TOKEN}" | docker login ${REGION}.ocir.io -u "${USERNAME}" --password-stdin
+          cat ~/.oci/private_key.pem | docker login ${REGION}.ocir.io -u "${USERNAME}" --password-stdin
 
       - name: Build and Push Docker Image
         run: |
@@ -111,6 +111,9 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
+
+          echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+          
           jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
