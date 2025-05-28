@@ -8,7 +8,7 @@ on:
 
 env:
   SERVICE_NAME: servb
-  NAMESPACE: test-app
+  NAMESPACE: app1
   NAMESPACES: bm3jgid6hk1z
   CLUSTER_NAME: stage-clus
   ARTIFACT_REPO_NAME: zop-dev
@@ -42,9 +42,6 @@ jobs:
 
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
           
-          echo "=== ~/temp.json ==="
-          cat /tmp/creds.json
-
           jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
@@ -63,15 +60,6 @@ jobs:
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
           source ~/.bashrc || true
-      
-      - name: Display OCI Config
-        run: |
-          echo "=== ~/.oci/config ==="
-          cat ~/.oci/config
-          echo "=== ~/.oci/private_key.pem ==="
-          cat ~/.oci/private_key.pem
-          echo "=== ~/temp.json ==="
-          cat /tmp/creds.json
           
       - name: Test OCI CLI Access
         run: |
@@ -80,17 +68,9 @@ jobs:
       - name: Login to OCIR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.OCIR_REGION }}.ocir.io
-          username: ${{ env.OCIR_USERNAME }}
-          password: ${{ env.OCIR_PASSWORD }}
-
-      # - name: Login to OCI Artifact Registry
-      #   run: |
-      #     REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-      #     AUTH_TOKEN=$(jq -r '.auth_token' /tmp/creds.json)
-      #     USERNAME=$(jq -r '.username' /tmp/creds.json)
-
-      #     cat ${AUTH_TOKEN} | docker login ${REGION}.ocir.io -u "${USERNAME}" --password-stdin
+          registry: ${{ secrets.serviceCredentials.region }}.ocir.io
+          username: ${{ secrets.username }}
+          password: ${{ secrets.auth_token }}
 
       - name: Build and Push Docker Image
         run: |
@@ -122,7 +102,6 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
-
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
           
           jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
@@ -144,14 +123,9 @@ jobs:
           echo "$HOME/bin" >> $GITHUB_PATH
           source ~/.bashrc || true
 
-      - name: Display OCI Config
+      - name: Test OCI CLI Access
         run: |
-          echo "=== ~/.oci/config ==="
-          cat ~/.oci/config
-          echo "=== ~/.oci/private_key.pem ==="
-          cat ~/.oci/private_key.pem
-          echo "=== /tmp/ ==="
-          cat ~/.oci/private_key.pem
+          oci os ns get --config-file ~/.oci/config --profile DEFAULT
 
       - name: Install and Configure kubectl
         run: |
