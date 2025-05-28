@@ -77,10 +77,10 @@ jobs:
       - name: Login to OCI Artifact Registry
         run: |
           REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          AUTH_TOKEN=$(jq -r '.auth_token' /tmp/creds.json)
+          AUTH_TOKEN="[+v{JknV:c7cDs:18sd0"
           USERNAME=$(jq -r '.username' /tmp/creds.json)
 
-          cat ~/.oci/private_key.pem | docker login ${REGION}.ocir.io -u "${USERNAME}" --password-stdin
+          cat ${AUTH_TOKEN} | docker login ${REGION}.ocir.io -u "${USERNAME}" --password-stdin
 
       - name: Build and Push Docker Image
         run: |
