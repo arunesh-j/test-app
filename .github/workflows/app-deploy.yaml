@@ -9,10 +9,8 @@ on:
 env:
   SERVICE_NAME: servb
   NAMESPACE: app1
-  NAMESPACES: bm3jgid6hk1z
   CLUSTER_NAME: stage-clus
   ARTIFACT_REPO_NAME: zop-dev
-  OKE_CLUSTER_ID: ocid1.cluster.oc1.ap-mumbai-1.aaaaaaaalhmiksodiukv4fqmvldccmtkwokc5nuseve6hw2gocdfjcnggdwq
 
 jobs:
   dockerize:
@@ -39,15 +37,15 @@ jobs:
 
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
           
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
+          jq -r '.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
           [DEFAULT]
-          user=$(jq -r '.serviceCredentials.user_ocid' /tmp/creds.json)
-          fingerprint=$(jq -r '.serviceCredentials.fingerprint' /tmp/creds.json)
-          tenancy=$(jq -r '.serviceCredentials.tenancy_ocid' /tmp/creds.json)
-          region=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
+          user=$(jq -r '.user_ocid' /tmp/creds.json)
+          fingerprint=$(jq -r '.fingerprint' /tmp/creds.json)
+          tenancy=$(jq -r '.tenancy_ocid' /tmp/creds.json)
+          region=$(jq -r '.region' /tmp/creds.json)
           key_file=~/.oci/private_key.pem
           pass_phrase="N/A"
           EOF
@@ -65,9 +63,10 @@ jobs:
       - name: Extract OCIR credentials
         id: extract-vars
         run: |
-          echo "region=$(jq -r '.serviceCredentials.region' /tmp/creds.json)" >> $GITHUB_OUTPUT
-          echo "username=$(jq -r '.username' /tmp/creds.json)" >> $GITHUB_OUTPUT
-          echo "auth_token=$(jq -r '.auth_token' /tmp/creds.json)" >> $GITHUB_OUTPUT
+          echo "region=$(jq -r '.region' /tmp/creds.json)" >> $GITHUB_OUTPUT
+          echo "username=$(jq -r '.oar_username' /tmp/creds.json)" >> $GITHUB_OUTPUT
+          echo "auth_token=$(jq -r '.oar_password' /tmp/creds.json)" >> $GITHUB_OUTPUT
+          echo "tenancy_namespace=$(jq -r '.oar_username' /tmp/creds.json | cut -d'/' -f1)" >> $GITHUB_OUTPUT
 
       - name: Login to OCIR
         uses: docker/login-action@v3
@@ -78,19 +77,19 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          IMAGE_URL="${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
+          REGION=$(jq -r '.region' /tmp/creds.json)
+          IMAGE_URL="${REGION}.ocir.io/${{ steps.extract-vars.outputs.tenancy_namespace }}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
 
           docker build -t ${IMAGE_URL} .
           docker push ${IMAGE_URL}
 
-          docker tag ${IMAGE_URL} "${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
-          docker push "${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
+          docker tag ${IMAGE_URL} "${REGION}.ocir.io/${{ steps.extract-vars.outputs.tenancy_namespace }}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
+          docker push "${REGION}.ocir.io/${{ steps.extract-vars.outputs.tenancy_namespace }}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:latest"
 
       - id: output-image
         run: |
-          REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
-          echo "image=${REGION}.ocir.io/${{env.NAMESPACES}}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          REGION=$(jq -r '.region' /tmp/creds.json)
+          echo "image=${REGION}.ocir.io/${{ steps.extract-vars.outputs.tenancy_namespace }}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   deployment:
     runs-on: ubuntu-latest
@@ -108,15 +107,15 @@ jobs:
 
           echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
           
-          jq -r '.serviceCredentials.private_key' /tmp/creds.json > ~/.oci/private_key.pem
+          jq -r '.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
 
           cat > ~/.oci/config <<EOF
           [DEFAULT]
-          user=$(jq -r '.serviceCredentials.user_ocid' /tmp/creds.json)
-          fingerprint=$(jq -r '.serviceCredentials.fingerprint' /tmp/creds.json)
-          tenancy=$(jq -r '.serviceCredentials.tenancy_ocid' /tmp/creds.json)
-          region=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
+          user=$(jq -r '.user_ocid' /tmp/creds.json)
+          fingerprint=$(jq -r '.fingerprint' /tmp/creds.json)
+          tenancy=$(jq -r '.tenancy_ocid' /tmp/creds.json)
+          region=$(jq -r '.region' /tmp/creds.json)
           key_file=~/.oci/private_key.pem
           pass_phrase="N/A"
           EOF
@@ -139,14 +138,19 @@ jobs:
 
       - name: Set Up OKE Kubeconfig
         run: |
-          REGION=$(jq -r '.serviceCredentials.region' /tmp/creds.json)
+          REGION=$(jq -r '.region' /tmp/creds.json)
+          CLUSTER_OCID=$(jq -r '.cluster_ocid' /tmp/creds.json)
 
           oci ce cluster create-kubeconfig \
-            --cluster-id ${{ env.OKE_CLUSTER_ID }} \
+            --cluster-id ${CLUSTER_OCID} \
             --file ~/.kube/config \
             --region ${REGION} \
             --token-version 2.0.0 \
             --kube-endpoint PUBLIC_ENDPOINT
+            
+      - name: Set Image Pull Secret
+        run: |
+          kubectl patch deployment/${{ env.SERVICE_NAME }} -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ocirsecret"}]}}}}' --namespace ${{ env.NAMESPACE }}
 
       - name: Update Deployment
         run: |
