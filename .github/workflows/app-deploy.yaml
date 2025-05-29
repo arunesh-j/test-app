@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  SERVICE_NAME: servb
+  SERVICE_NAME: servc
   NAMESPACE: app1
   CLUSTER_NAME: stage-clus
   ARTIFACT_REPO_NAME: zop-dev
