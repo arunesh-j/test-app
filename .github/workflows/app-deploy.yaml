@@ -1,4 +1,4 @@
-name: Build and Deploy for Go service - OCI
+name: Build and Deploy for Go service
 
 on:
   push:
@@ -7,10 +7,11 @@ on:
     branches: [ main ]
 
 env:
-  SERVICE_NAME: servc
+  SERVICE_NAME: serv1
   NAMESPACE: app1
-  CLUSTER_NAME: stage-clus
+  CLUSTER_NAME: zop-cluster
   ARTIFACT_REPO_NAME: zop-dev
+
 
 jobs:
   dockerize:
@@ -35,7 +36,7 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
-          echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+          echo '${{ secrets.SERV1_APP1_DEPLOYMENT_KEY }}' > /tmp/creds.json
           
           jq -r '.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
@@ -90,7 +91,6 @@ jobs:
         run: |
           REGION=$(jq -r '.region' /tmp/creds.json)
           echo "image=${REGION}.ocir.io/${{ steps.extract-vars.outputs.tenancy_namespace }}/${{ env.ARTIFACT_REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-
   deployment:
     runs-on: ubuntu-latest
     needs: dockerize
@@ -105,7 +105,7 @@ jobs:
         run: |
           mkdir -p ~/.oci
 
-          echo '${{ secrets.OCI_SERVICE_CREDENTIALS }}' > /tmp/creds.json
+          echo '${{ secrets.SERV1_APP1_DEPLOYMENT_KEY }}' > /tmp/creds.json
           
           jq -r '.private_key' /tmp/creds.json > ~/.oci/private_key.pem
           chmod 600 ~/.oci/private_key.pem
@@ -141,12 +141,7 @@ jobs:
           REGION=$(jq -r '.region' /tmp/creds.json)
           CLUSTER_OCID=$(jq -r '.cluster_ocid' /tmp/creds.json)
 
-          oci ce cluster create-kubeconfig \
-            --cluster-id ${CLUSTER_OCID} \
-            --file ~/.kube/config \
-            --region ${REGION} \
-            --token-version 2.0.0 \
-            --kube-endpoint PUBLIC_ENDPOINT
+          oci ce cluster create-kubeconfig --cluster-id ${CLUSTER_OCID} --file $HOME/.kube/config --region ${REGION} --token-version 2.0.0  --kube-endpoint PUBLIC_ENDPOINT
             
       - name: Set Image Pull Secret
         run: |
