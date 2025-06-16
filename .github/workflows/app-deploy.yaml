@@ -7,8 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    name: 🔨 Build Go App
+  build_and_dockerize:
+    name: 🔨 Build & 🐳 Dockerize
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,20 +19,12 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Get dependencies
+      - name: Download dependencies
         run: go mod download
 
-      - name: Build Go Binary actions
+      - name: Build Go Binary
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -buildvcs=false -o main
-
-  dockerize:
-    name: 🐳 Dockerize and Push
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
       - name: Log in to DockerHub
         uses: docker/login-action@v3
