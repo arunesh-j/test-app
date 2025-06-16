@@ -17,10 +17,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: '1.21'
 
-      - name: Build Go binary
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -buildvcs=false -o main
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build Go Binary actions
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -buildvcs=false -o main
 
   dockerize:
     name: 🐳 Dockerize and Push
